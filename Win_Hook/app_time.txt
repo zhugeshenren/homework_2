@@ -1,0 +1,7 @@
+begin time 1594615731 : ScriptedSandbox64.exe
+begin time 1594615731 : cmd.exe
+begin time 1594615737 : chrome.exe
+begin time 1594615740 : git.exe
+begin time 1594615741 : git.exe
+begin time 1594615760 : git.exe
+begin time 1594615761 : git.exe

